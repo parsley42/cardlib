@@ -12,6 +12,14 @@ type Card int
 
 const NoCard = 52 // if you deal out the whole deck, you get NoCard
 
+func (c Card) String() string {
+	return ranks[c/4] + suits[c%4]
+}
+
+func (c Card) GoString() string {
+	return ranks[c/4] + suits[c%4]
+}
+
 var r *rand.Rand
 
 func init() {
