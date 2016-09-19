@@ -27,10 +27,11 @@ func init() {
 }
 
 type Deck struct {
-	present [52]bool
-	cards   []Card
-	len     int // number of entries in cards
-	left    int // cards left in the deck
+	present   [52]bool
+	cards     []Card
+	len       int // number of entries in cards
+	left      int // cards left in the deck
+	refreshes int // how many times cards had to be rebuilt
 }
 
 func NewDeck() *Deck {
@@ -56,6 +57,11 @@ func (d *Deck) refresh() {
 			i++
 		}
 	}
+	d.refreshes++
+}
+
+func (d *Deck) Refreshes() int {
+	return d.refreshes
 }
 
 func (d *Deck) HasCard(c Card) bool {
