@@ -1,33 +1,81 @@
 package cardlib
 
+import (
+	"math/rand"
+	"time"
+)
+
+var ranks = []string{"2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"}
+var suits = []string{"c", "d", "h", "s"}
+
 type Card int
+
+const NoCard = 52 // if you deal out the whole deck, you get NoCard
+
+var r *rand.Rand
+
+func init() {
+	r = rand.New(rand.NewSource(time.Now().UnixNano()))
+}
 
 type Deck struct {
 	present [52]bool
-	left    []Card
+	cards   []Card
+	len     int // number of entries in cards
+	left    int // cards left in the deck
 }
 
 func NewDeck() *Deck {
-	left := make([]Card, 52)
+	cards := make([]Card, 52)
 	for i := 0; i < 52; i++ {
-		left[i] = Card(i)
+		cards[i] = Card(i)
 	}
 	return &Deck{
 		present: [52]bool{true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true},
-		left:    left,
+		cards:   cards,
+		len:     52,
+		left:    52,
 	}
 }
 
-func (d *Deck) hasCard(c Card) bool {
+func (d *Deck) refresh() {
+	d.len = d.left
+	d.cards = make([]Card, d.len)
+	i := 0
+	for c, p := range d.present {
+		if p {
+			d.cards[i] = Card(c)
+			i++
+		}
+	}
+}
+
+func (d *Deck) HasCard(c Card) bool {
+	if c == NoCard {
+		return false
+	}
 	return d.present[int(c)]
 }
 
-func (d *Deck) remove(c Card) {
+func (d *Deck) Remove(c Card) {
 	d.present[c] = false
-	for i := 0; i < len(d.left); i++ {
-		if d.left[i] == c {
-			d.left = append(d.left[:i], d.left[i+1:]...)
-			break
-		}
+	d.left--
+}
+
+func (d *Deck) Deal() Card {
+	if d.left == 0 {
+		return NoCard
+	}
+	card := d.cards[r.Intn(d.len)]
+	if d.present[card] {
+		d.left--
+		d.present[card] = false
+		return card
+	} else {
+		d.refresh()
+		card := d.cards[r.Intn(d.len)]
+		d.left--
+		d.present[card] = false
+		return card
 	}
 }
