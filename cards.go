@@ -7,16 +7,24 @@ import (
 
 var ranks = []string{"2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"}
 var suits = []string{"c", "d", "h", "s"}
+var alltrue = [52]bool{true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true}
 
 type Card int
 
 const NoCard = 52 // if you deal out the whole deck, you get NoCard
+const tries = 2
 
 func (c Card) String() string {
+	if c == NoCard {
+		return ""
+	}
 	return ranks[c/4] + suits[c%4]
 }
 
 func (c Card) GoString() string {
+	if c == NoCard {
+		return ""
+	}
 	return ranks[c/4] + suits[c%4]
 }
 
@@ -37,16 +45,28 @@ type Deck struct {
 
 func NewDeck() *Deck {
 	full := make([]Card, 52)
+	present := alltrue
 	cards := full
 	for i := 0; i < 52; i++ {
 		cards[i] = Card(i)
 	}
 	return &Deck{
-		present: [52]bool{true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true},
+		present: present,
 		cards:   cards,
 		full:    full,
 		len:     52,
 		left:    52,
+	}
+}
+
+func (d *Deck) Reset() {
+	d.cards = d.full
+	d.present = alltrue
+	d.len = 52
+	d.left = 52
+	d.refreshes = 0
+	for i := 0; i < 52; i++ {
+		d.cards[i] = Card(i)
 	}
 }
 
@@ -83,16 +103,17 @@ func (d *Deck) Deal() Card {
 	if d.left == 0 {
 		return NoCard
 	}
-	card := d.cards[r.Intn(d.len)]
-	if d.present[card] {
-		d.left--
-		d.present[card] = false
-		return card
-	} else {
-		d.refresh()
+	for i := 0; i < tries; i++ {
 		card := d.cards[r.Intn(d.len)]
-		d.left--
-		d.present[card] = false
-		return card
+		if d.present[card] {
+			d.left--
+			d.present[card] = false
+			return card
+		}
 	}
+	d.refresh()
+	card := d.cards[r.Intn(d.len)]
+	d.left--
+	d.present[card] = false
+	return card
 }
