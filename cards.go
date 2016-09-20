@@ -29,19 +29,22 @@ func init() {
 type Deck struct {
 	present   [52]bool
 	cards     []Card
+	full      []Card
 	len       int // number of entries in cards
 	left      int // cards left in the deck
 	refreshes int // how many times cards had to be rebuilt
 }
 
 func NewDeck() *Deck {
-	cards := make([]Card, 52)
+	full := make([]Card, 52)
+	cards := full
 	for i := 0; i < 52; i++ {
 		cards[i] = Card(i)
 	}
 	return &Deck{
 		present: [52]bool{true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true},
 		cards:   cards,
+		full:    full,
 		len:     52,
 		left:    52,
 	}
@@ -49,7 +52,7 @@ func NewDeck() *Deck {
 
 func (d *Deck) refresh() {
 	d.len = d.left
-	d.cards = make([]Card, d.len)
+	d.cards = d.full[:d.len]
 	i := 0
 	for c, p := range d.present {
 		if p {
