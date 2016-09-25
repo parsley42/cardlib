@@ -19,12 +19,6 @@ type Deck struct {
 	refreshes int // how many times cards had to be rebuilt
 }
 
-type CardSpec struct {
-	cr      [4]CardRune // Runes specifying a card ("Ah", "2c") or range ("ATs+", "KK", "T9s")
-	len     int
-	isrange bool
-}
-
 var ranks = []CardRune{'2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'}
 var suits = []CardRune{'c', 'd', 'h', 's'}
 
@@ -48,23 +42,15 @@ func init() {
 	}
 }
 
-func ParseCard(s string) *CardSpec {
-	cs := &CardSpec{}
-	l := 0
-	for _, r := range s {
-		cs.cr[l] = CardRune(r)
-		l++
-	}
-	cs.len = l
-	_, cs.isrange = ranktable[cs.cr[1]]
-	return cs
-}
-
 func (cs *CardSpec) CardNum() Card {
 	if cs.isrange {
 		return NoCard
 	}
 	return Card(cs.cr[0].Rank()*4 + cs.cr[1].Suit())
+}
+
+func CardNum(r, s CardRune) Card {
+	return Card(r*4 + s)
 }
 
 func (cs CardRune) Rank() int {
