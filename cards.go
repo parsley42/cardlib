@@ -1,24 +1,52 @@
 package cardlib
 
 import (
+	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 )
 
 var ranks = []string{"2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"}
 var suits = []string{"c", "d", "h", "s"}
-var alltrue = [52]bool{true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true}
 
 type Card int
 
 const NoCard = 52 // if you deal out the whole deck, you get NoCard
 const tries = 2
 
+func (d Deck) Print() {
+	ranks := make([]string, 52)
+	suits := make([]string, 52)
+	present := make([]string, 52)
+	for i := 0; i < 52; i++ {
+		ranks[i] = Card(i).Rank()
+		suits[i] = Card(i).Suit()
+		if d.present[i] {
+			present[i] = "t"
+		} else {
+			present[i] = "f"
+		}
+	}
+	fmt.Println(strings.Join(ranks, " "))
+	fmt.Println(strings.Join(suits, " "))
+	fmt.Println(strings.Join(present, " "))
+	fmt.Println("Cards left:", d.left)
+}
+
+func (c Card) Rank() string {
+	return ranks[c/4]
+}
+
+func (c Card) Suit() string {
+	return suits[c%4]
+}
+
 func (c Card) String() string {
 	if c == NoCard {
 		return ""
 	}
-	return ranks[c/4] + suits[c%4]
+	return c.Rank() + c.Suit()
 }
 
 func (c Card) GoString() string {
@@ -28,10 +56,10 @@ func (c Card) GoString() string {
 	return ranks[c/4] + suits[c%4]
 }
 
-var r *rand.Rand
+var random *rand.Rand
 
 func init() {
-	r = rand.New(rand.NewSource(time.Now().UnixNano()))
+	random = rand.New(rand.NewSource(time.Now().UnixNano()))
 }
 
 type Deck struct {
@@ -45,28 +73,28 @@ type Deck struct {
 
 func NewDeck() *Deck {
 	full := make([]Card, 52)
-	present := alltrue
 	cards := full
+	d := &Deck{
+		cards: cards,
+		full:  full,
+		len:   52,
+		left:  52,
+	}
 	for i := 0; i < 52; i++ {
 		cards[i] = Card(i)
+		d.present[i] = true
 	}
-	return &Deck{
-		present: present,
-		cards:   cards,
-		full:    full,
-		len:     52,
-		left:    52,
-	}
+	return d
 }
 
 func (d *Deck) Reset() {
 	d.cards = d.full
-	d.present = alltrue
 	d.len = 52
 	d.left = 52
 	d.refreshes = 0
 	for i := 0; i < 52; i++ {
 		d.cards[i] = Card(i)
+		d.present[i] = true
 	}
 }
 
@@ -104,7 +132,7 @@ func (d *Deck) Deal() Card {
 		return NoCard
 	}
 	for i := 0; i < tries; i++ {
-		card := d.cards[r.Intn(d.len)]
+		card := d.cards[random.Intn(d.len)]
 		if d.present[card] {
 			d.left--
 			d.present[card] = false
@@ -112,7 +140,7 @@ func (d *Deck) Deal() Card {
 		}
 	}
 	d.refresh()
-	card := d.cards[r.Intn(d.len)]
+	card := d.cards[random.Intn(d.len)]
 	d.left--
 	d.present[card] = false
 	return card
